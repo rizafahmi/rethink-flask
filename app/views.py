@@ -40,7 +40,11 @@ def teardown_request(exception):
     except AttributeError:
         pass
 
-@app.route("/")
+@app.route("/", methods = ['GET', 'POST'])
 def index():
     form = TaskForm()
-    return render_template('index.html', form=form)
+    if form.validate_on_submit():
+        r.table('todos').insert({"name": form.label.data}).run(g.rdb_conn)
+        return redirect(url_for('index'))
+    selection = list(r.table('todos').run(g.rdb_conn))
+    return render_template('index.html', form=form, tasks=selection)
